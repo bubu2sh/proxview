@@ -1,0 +1,32 @@
+{
+  "name": "proxview",
+  "version": "1.0.0",
+  "description": "Simple  self-hosting proxmox dashboard",
+  "main": "serv.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bubudotsh/ProxView.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bubudotsh/ProxView/issues"
+  },
+  "homepage": "https://github.com/bubudotsh/ProxView#readme",
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "child-process": "^1.0.2",
+    "express": "^4.18.2",
+    "fast-folder-size": "^2.0.0",
+    "get-folder-size": "^4.0.0",
+    "http": "^0.0.1-security",
+    "moment": "^2.29.4",
+    "os": "^0.1.2",
+    "pm2": "^5.3.0",
+    "proxmox": "^1.0.0",
+    "socket.io": "^4.6.2"
+  }
+}

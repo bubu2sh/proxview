@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard Proxmox</title>
+  <style>
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #000000;
+      color: white;
+    }
+
+    .title {
+      margin-left: 1%;
+    }
+
+    .vm-card {
+      background-color: #202020;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 420px;
+      display: inline-block;
+      margin-left: 1%;
+    }
+
+    .vm-card-row {
+      display: flex; 
+      justify-content: space-between; 
+      padding-bottom: 20px;
+      color: #FFFFFF;
+    }
+    
+    .row {
+        display: flex;
+    }
+
+    .nrow {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding-bottom: 20px;
+        color: #878787 ;
+    }
+
+    .drow {
+        display: block;
+        width: 100%;
+        height: 100%;
+        text-align: right;
+        color: #6bee65;
+    }
+
+    .vm-card-name {
+      font-weight: bold;
+    }
+
+    .graph {
+      width: 98%;
+      display: flex;
+      margin-left: 1%;
+      margin-right: 1%;
+    }
+ 
+    .cpuhChart {
+      width: 50%;
+      height: 100%;
+    }
+
+    .ramhChart {
+      width: 50%;
+      height: 100%;
+    }
+
+    .log {
+      width: 98%;
+      height: 500px;
+      margin-right: 1%;
+      margin-left: 1%;
+      overflow: auto;
+      border-radius: 10px;
+      background-color: #202020;
+      color: #FFFFFF;
+      margin-bottom: 50px;
+    }
+
+    .logss {
+      width: 100%;
+      height: 100%;
+      color: #FFFFFF;
+    }
+
+    a {
+      color: #FFFFFF;
+    }
+
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 430px;
+      padding-top: 5px;
+      padding-bottom: 5px;
+      text-align: center;
+      z-index: 9999;
+    }
+
+    @media (max-width: 1000px) {
+        body {
+            font-size: 32px;
+        }
+        .title {
+            margin-left: 3%;
+        }
+        .vm-card {
+            width: 94%;
+            margin-left: 3%;
+            margin-right: 3%;
+        }
+
+        .log {
+          font-size: 10px;
+        }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="/logout">LogOut</a>
+
+  <p class="title">Time:</p>
+  <div id="times"></div>
+
+  <p class="title">System:</p>
+  <div id="system"></div>
+
+  <div id="popup" class="popup"></div>
+
+  <p class="title">Nodes:</p>
+  <div id="nod"></div>
+
+  <p class="title">Vms:</p>
+  <div id="dashboard"></div>
+
+  <p class="title">Sotrage:</p>
+  <div id="storage"></div>
+
+  <p class="title">Network:</p>
+  <div id="net"></div>
+
+  <p class="title">Services:</p>
+  <div id="service"></div>
+
+  <div style="width: 100%; height: 100px;"></div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    $(document).ready(() => {
+      const socket = io();
+      socket.on('times', (data) => {
+        updatenodes(data);
+      });
+
+      function updatenodes(data) {
+        $('#times').empty();
+        data.forEach((vm) => {
+          const card = $('<div>').addClass('vm-card');
+          const nameRow = $('<div>').addClass('vm-card-row').appendTo(card);
+          const name = $('<div>').addClass('vm-card-name').text(`${vm.time}`).appendTo(nameRow);
+
+          $('#times').append(card);
+        });
+      }
+    });
+  </script>
+
+
+
+
+  <script>
+    function submitForm1(id) {
+      fetch('/process1', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ value: id })
+      })
+      .then(function(response) {});
+    }
+
+    function submitForm2(id) {
+      fetch('/process2', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ value: id })
+      })
+      .then(function(response) {});
+    }
+  </script>
+
+
+
+  <script>
+    $(document).ready(() => {
+      const socket = io();
+      socket.on('system', (data) => {
+        updatenodes(data);
+      });
+
+      function updatenodes(data) {
+        $('#system').empty();
+        data.forEach((vm) => {
+          const card = $('<div>').addClass('vm-card');
+          const nameRow = $('<div>').addClass('vm-card-row').appendTo(card);
+          const name = $('<div>').addClass('vm-card-name').text(`${vm.system}`).appendTo(nameRow);
+          const status = $('<div>').text(`${(vm.uptime / 3600).toFixed(0)} h`).appendTo(nameRow);
+
+          const row = $('<div>').addClass('row').appendTo(card);
+
+          const nrow = $('<div>').addClass('nrow').appendTo(row);
+          const ncpus = $('<div>').text(`Kernel:`).appendTo(nrow);
+          const nmaxdisk = $('<div>').text(`Architecture:`).appendTo(nrow);
+          const nmaxmem = $('<div>').text(`Platform:`).appendTo(nrow);
+          const ncpuss = $('<div>').text(`Cpu temp:`).appendTo(nrow);
+          const nmaxdisks = $('<div>').text(`Process:`).appendTo(nrow);
+
+          const drow = $('<div>').addClass('drow').appendTo(row);
+          const cpus = $('<div>').text(`${vm.kernel}`).appendTo(drow);
+          const maxdisk = $('<div>').text(`${vm.arch}`).appendTo(drow);
+          const maxmem = $('<div>').text(`${vm.plateforme}`).appendTo(drow);
+          const maxmems = $('<div>').text(`${vm.cpu}`).appendTo(drow);
+          const maxmemss = $('<div>').text(`${vm.process}`).appendTo(drow);
+
+          $('#system').append(card);
+        });
+      }
+    });
+  </script>
+
+  <script>
+    $(document).ready(() => {
+      const socket = io();
+      socket.on('update', (data) => {
+        updateDashboard(data);
+      });
+
+      function updateDashboard(data) {
+        $('#dashboard').empty();
+        data.forEach((vm) => {
+          const card = $('<div>').addClass('vm-card');
+          const nameRow = $('<div>').addClass('vm-card-row').appendTo(card);
+          const name = $(`<div>`).addClass('vm-card-name').text(`${vm.vmid} ${vm.name}`).appendTo(nameRow);
+
+          const status = $('<div>').text(`${vm.status} ${(vm.uptime / 3600).toFixed(0)} h`).appendTo(nameRow);
+
+          const row = $('<div>').addClass('row').appendTo(card);
+
+          const nrow = $('<div>').addClass('nrow').appendTo(row);
+          const ncpus = $('<div>').text(`CPU:`).appendTo(nrow);
+          const nmaxdisk = $('<div>').text(`Disk:`).appendTo(nrow);
+          const nmaxmem = $('<div>').text(`Memory:`).appendTo(nrow);
+          const nnetin = $('<div>').text(`Net In / Out:`).appendTo(nrow);
+          const start = $(`<br><a href="javascript:submitForm1(${vm.vmid});">Start</a>`).appendTo(nrow);
+
+          const drow = $('<div>').addClass('drow').appendTo(row);
+          const cpus = $('<div>').text(`${(vm.cpu * 100).toFixed(2)}% of ${(vm.cpus).toFixed(0)} cores`).appendTo(drow);
+          const maxdisk = $('<div>').text(`${(vm.maxdisk / 1024 / 1024 / 1024).toFixed(0)} Go`).appendTo(drow);
+          const maxmem = $('<div>').text(`${((vm.mem / 1024 / 1024) / (vm.maxmem / 1024 / 1024) * 100).toFixed(0)} %  (${(vm.mem / 1024 / 1024).toFixed(0)} Mo of ${(vm.maxmem / 1024 / 1024).toFixed(0)} Mo)`).appendTo(drow);
+          const netin = $('<div>').text(`${(vm.netin / 1024 / 1024).toFixed(0)} Mo / ${(vm.netout / 1024 / 1024).toFixed(0)} Mo`).appendTo(drow);
+          const stop = $(`<br><a href="javascript:submitForm2(${vm.vmid});">Stop</a>`).appendTo(drow);
+
+          $('#dashboard').append(card);
+        });
+      }
+    });
+  </script>
+
+  <script>
+    $(document).ready(() => {
+      const socket = io();
+      socket.on('nodes', (data) => {
+        updatenodes(data);
+      });
+
+      function updatenodes(data) {
+        $('#nod').empty();
+        data.forEach((vm) => {
+          const card = $('<div>').addClass('vm-card');
+          const nameRow = $('<div>').addClass('vm-card-row').appendTo(card);
+          const name = $('<div>').addClass('vm-card-name').text(`${vm.id} ${vm.node}`).appendTo(nameRow);
+          const status = $('<div>').text(`${vm.status} ${(vm.uptime / 3600).toFixed(0)} h`).appendTo(nameRow);
+
+          const row = $('<div>').addClass('row').appendTo(card);
+
+          const nrow = $('<div>').addClass('nrow').appendTo(row);
+          const ncpus = $('<div>').text(`CPU:`).appendTo(nrow);
+          const nmaxdisk = $('<div>').text(`Disk:`).appendTo(nrow);
+          const nmaxmem = $('<div>').text(`Memory:`).appendTo(nrow);
+
+          const drow = $('<div>').addClass('drow').appendTo(row);
+          const cpus = $('<div>').text(`${(vm.cpu * 100).toFixed(2)}% of ${(vm.maxcpu).toFixed(0)} cores`).appendTo(drow);
+          const maxdisk = $('<div>').text(`${(vm.maxdisk / 1024 / 1024 / 1024).toFixed(0)} Go`).appendTo(drow);
+          const maxmem = $('<div>').text(`${((vm.mem / 1024 / 1024) / (vm.maxmem / 1024 / 1024) * 100).toFixed(0)} %  (${(vm.mem / 1024 / 1024).toFixed(0)} Mo of ${(vm.maxmem / 1024 / 1024).toFixed(0)} Mo)`).appendTo(drow);
+
+          $('#nod').append(card);
+        });
+      }
+    });
+  </script>
+
+  <script>
+    $(document).ready(() => {
+      const socket = io();
+      socket.on('storage', (data) => {
+        updatenodes(data);
+      });
+
+      function updatenodes(data) {
+        $('#storage').empty();
+        data.forEach((vm) => {
+          const card = $('<div>').addClass('vm-card');
+          const nameRow = $('<div>').addClass('vm-card-row').appendTo(card);
+          const name = $('<div>').addClass('vm-card-name').text(`${vm.storage}`).appendTo(nameRow);
+
+          const row = $('<div>').addClass('row').appendTo(card);
+
+          const nrow = $('<div>').addClass('nrow').appendTo(row);
+          const ncpus = $('<div>').text(`Total:`).appendTo(nrow);
+          const nmaxdisk = $('<div>').text(`Used:`).appendTo(nrow);
+          const nmaxmem = $('<div>').text(`Aviable:`).appendTo(nrow);
+
+          const drow = $('<div>').addClass('drow').appendTo(row);
+          const cpus = $('<div>').text(`${(vm.total / 1024 / 1024 / 1024).toFixed(0)} Go`).appendTo(drow);
+          const maxdisk = $('<div>').text(`${(vm.used / 1024 / 1024 / 1024).toFixed(0)} Go`).appendTo(drow);
+          const maxmem = $('<div>').text(`${(vm.avail / 1024 / 1024 / 1024).toFixed(0)} Go`).appendTo(drow);
+
+
+          $('#storage').append(card);
+        });
+      }
+    });
+  </script>
+
+
+
+
+<script>
+  $(document).ready(() => {
+    const socket = io();
+    socket.on('net', (data) => {
+      updatenodes(data);
+    });
+
+    function updatenodes(data) {
+      $('#net').empty();
+      data.forEach((vm) => {
+        const card = $('<div>').addClass('vm-card');
+        const nameRow = $('<div>').addClass('vm-card-row').appendTo(card);
+        const name = $('<div>').addClass('vm-card-name').text(`${vm.iface}`).appendTo(nameRow);
+        const status = $('<div>').text(`${vm.address}`).appendTo(nameRow);
+
+        const row = $('<div>').addClass('row').appendTo(card);
+
+        const nrow = $('<div>').addClass('nrow').appendTo(row);
+        const ncpuss = $('<div>').text(`priority:`).appendTo(nrow);
+        const ncpus = $('<div>').text(`geteway:`).appendTo(nrow);
+        const nmaxdisk = $('<div>').text(`type:`).appendTo(nrow);
+        const nmaxmem = $('<div>').text(`cidr:`).appendTo(nrow);
+
+        const drow = $('<div>').addClass('drow').appendTo(row);
+        const cpuss = $('<div>').text(`${vm.priority}`).appendTo(drow);
+        const cpusss = $('<div>').text(`${vm.gateway}`).appendTo(drow);
+        const cpussss = $('<div>').text(`${vm.type}`).appendTo(drow);
+        const cpusssss = $('<div>').text(`${vm.cidr}`).appendTo(drow);
+
+        $('#net').append(card);
+      });
+    }
+  });
+</script>
+
+<script>
+  $(document).ready(() => {
+    const socket = io();
+    socket.on('service', (data) => {
+      updatenodes(data);
+    });
+
+    function updatenodes(data) {
+      $('#service').empty();
+      data.forEach((vm) => {
+        const card = $('<div>').addClass('vm-card');
+        const nameRow = $('<div>').addClass('vm-card-row').appendTo(card);
+        const name = $('<div>').addClass('vm-card-name').text(`${vm.name}`).appendTo(nameRow);
+          const status = $('<div>').text(`${vm.position - 1}`).appendTo(nameRow);
+
+        const row = $('<div>').addClass('row').appendTo(card);
+
+        const nrow = $('<div>').addClass('nrow').appendTo(row);
+        const ncpuss = $('<div>').text(`cpu:`).appendTo(nrow);
+        const ncpus = $('<div>').text(`ram:`).appendTo(nrow);
+
+        const drow = $('<div>').addClass('drow').appendTo(row);
+        const cpuss = $('<div>').text(`${vm.cpu} %`).appendTo(drow);
+        const cpusss = $('<div>').text(`${vm.mem} %`).appendTo(drow);
+        $('#service').append(card);
+      });
+    }
+  });
+</script>
+</body>
+</html>
