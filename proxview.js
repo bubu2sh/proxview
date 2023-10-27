@@ -6,34 +6,31 @@ const os = require('os');
 const { execSync } = require("child_process");
 const { log } = require('console');
 const { disconnect } = require('process');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const port = 9091;
+const port = 3000;
 const USERNAME = 'root';
 const PASSWORD = '@root';
 
 let isLogged = false;
 
-function get_data (datas) {
-  if(datas == "password") {
-    fs.readFile('config.json', 'utf8', (err, data) => {
-      const config = JSON.parse(data);
-      return config.password;
-    });
-  } else if (datas == "ip") {
-    fs.readFile('config.json', 'utf8', (err, data) => {
-      const config = JSON.parse(data);
-      return config.ip;
-    });
-  } else {
-    return "error";
+function readConfig() {
+  try {
+    const data = fs.readFileSync('config.json', 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("Error reading config.json:", err);
+    return {};
   }
 }
 
-const proxmox = require("proxmox")('API@pve', '', '');
+const config = readConfig();
+
+const proxmox = require("proxmox")(config.proxmox.apiUser, config.proxmox.apiPassword, config.proxmox.apiHost);
 
 
 app.use(express.static(__dirname + '/public'));
@@ -100,7 +97,7 @@ io.on('connection', function(socket) {
           kernel: os.release(),
           arch: os.arch(),
           plateforme: os.platform(),
-          cpu: execSync("sensors | grep Package | awk '{print $4}'").toString().trim(),
+          //cpu: execSync("sensors | grep Package | awk '{print $4}'").toString().trim(),
           process: execSync("ps aux --no-headers | wc -l").toString().trim()}]};
       let sortedData = JSON.stringify(data);
       data = JSON.parse(sortedData).data;
