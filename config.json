@@ -1,8 +1,8 @@
 {
     "proxmox": {
-      "apiUser": "", // ex API@pve
-      "apiPassword": "", // api password
-      "apiHost": "" // proxmox ip
+      "apiUser": "", 
+      "apiPassword": "", 
+      "apiHost": "" 
     }
   }
   
