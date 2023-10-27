@@ -6,7 +6,6 @@ const os = require('os');
 const { execSync } = require("child_process");
 const { log } = require('console');
 const { disconnect } = require('process');
-const proxmox = require("proxmox")('API@pve', '', '');
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +16,24 @@ const USERNAME = 'root';
 const PASSWORD = '@root';
 
 let isLogged = false;
+
+function get_data (datas) {
+  if(datas == "password") {
+    fs.readFile('config.json', 'utf8', (err, data) => {
+      const config = JSON.parse(data);
+      return config.password;
+    });
+  } else if (datas == "ip") {
+    fs.readFile('config.json', 'utf8', (err, data) => {
+      const config = JSON.parse(data);
+      return config.ip;
+    });
+  } else {
+    return "error";
+  }
+}
+
+const proxmox = require("proxmox")('API@pve', '', '');
 
 
 app.use(express.static(__dirname + '/public'));

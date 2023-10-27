@@ -1,0 +1,5 @@
+{
+    "ip": "your proxmox ip",
+    "password": "your api@pve password"
+}
+  
